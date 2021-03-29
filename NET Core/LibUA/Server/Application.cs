@@ -417,112 +417,165 @@ namespace LibUA.Server
             DataValue[] dataValueArray = new DataValue[readValueIds.Length];
             for (int index = 0; index < readValueIds.Length; ++index)
             {
-                if (!this.AddressSpaceTable.TryGetValue(readValueIds[index].NodeId, out Node node) || !this.SessionHasPermissionToRead(session, readValueIds[index].NodeId))
-                {
-                    dataValueArray[index] = new DataValue(null, new StatusCode?(StatusCode.BadNodeIdUnknown), new DateTime?(), new DateTime?());
-                }
-                else if (readValueIds[index].AttributeId == NodeAttribute.Value)
-                {
-                    dataValueArray[index] = this.HandleReadRequestInternal(readValueIds[index].NodeId);
-                }
-                else if (readValueIds[index].AttributeId == NodeAttribute.NodeId)
-                {
-                    dataValueArray[index] = new DataValue(node.Id, new StatusCode?(StatusCode.Good), new DateTime?(), new DateTime?());
-                }
-                else if (readValueIds[index].AttributeId == NodeAttribute.NodeClass)
-                {
-                    NodeClass nodeClass = node.GetNodeClass();
-                    dataValueArray[index] = new DataValue((int)nodeClass, new StatusCode?(StatusCode.Good), new DateTime?(), new DateTime?());
-                }
-                else if (readValueIds[index].AttributeId == NodeAttribute.BrowseName)
-                {
-                    dataValueArray[index] = new DataValue(node.BrowseName, new StatusCode?(StatusCode.Good), new DateTime?(), new DateTime?());
-                }
-                else if (readValueIds[index].AttributeId == NodeAttribute.DisplayName)
-                {
-                    dataValueArray[index] = new DataValue(node.DisplayName, new StatusCode?(StatusCode.Good), new DateTime?(), new DateTime?());
-                }
-                else if (readValueIds[index].AttributeId == NodeAttribute.Description)
-                {
-                    dataValueArray[index] = new DataValue(node.Description, new StatusCode?(StatusCode.Good), new DateTime?(), new DateTime?());
-                }
-                else if (readValueIds[index].AttributeId == NodeAttribute.WriteMask)
-                {
-                    dataValueArray[index] = new DataValue(node.WriteMask, new StatusCode?(StatusCode.Good), new DateTime?(), new DateTime?());
-                }
-                else if (readValueIds[index].AttributeId == NodeAttribute.UserWriteMask)
-                {
-                    dataValueArray[index] = new DataValue(node.UserWriteMask, new StatusCode?(StatusCode.Good), new DateTime?(), new DateTime?());
-                }
-                else if (readValueIds[index].AttributeId == NodeAttribute.UserWriteMask)
-                {
-                    dataValueArray[index] = new DataValue(node.UserWriteMask, new StatusCode?(StatusCode.Good), new DateTime?(), new DateTime?());
-                }
-                else if (readValueIds[index].AttributeId == NodeAttribute.AccessRestrictions)
-                {
-                    dataValueArray[index] = new DataValue((ushort)0, new StatusCode?(StatusCode.Good), new DateTime?(), new DateTime?());
-                }
-                else if (readValueIds[index].AttributeId == NodeAttribute.IsAbstract && node is NodeReferenceType)
-                {
-                    dataValueArray[index] = new DataValue((node as NodeReferenceType).IsAbstract, new StatusCode?(StatusCode.Good), new DateTime?(), new DateTime?());
-                }
-                else if (readValueIds[index].AttributeId == NodeAttribute.Symmetric && node is NodeReferenceType)
-                {
-                    dataValueArray[index] = new DataValue((node as NodeReferenceType).IsSymmetric, new StatusCode?(StatusCode.Good), new DateTime?(), new DateTime?());
-                }
-                else if (readValueIds[index].AttributeId == NodeAttribute.InverseName && node is NodeReferenceType)
-                {
-                    dataValueArray[index] = new DataValue((node as NodeReferenceType).InverseName, new StatusCode?(StatusCode.Good), new DateTime?(), new DateTime?());
-                }
-                else if (readValueIds[index].AttributeId == NodeAttribute.ContainsNoLoops && node is NodeView)
-                {
-                    dataValueArray[index] = new DataValue((node as NodeView).ContainsNoLoops, new StatusCode?(StatusCode.Good), new DateTime?(), new DateTime?());
-                }
-                else if (readValueIds[index].AttributeId == NodeAttribute.EventNotifier && node is NodeView)
-                {
-                    dataValueArray[index] = new DataValue((node as NodeView).EventNotifier, new StatusCode?(StatusCode.Good), new DateTime?(), new DateTime?());
-                }
-                else if (readValueIds[index].AttributeId == NodeAttribute.EventNotifier && node is NodeObject)
-                {
-                    dataValueArray[index] = new DataValue((node as NodeObject).EventNotifier, new StatusCode?(StatusCode.Good), new DateTime?(), new DateTime?());
-                }
-                else if (readValueIds[index].AttributeId == NodeAttribute.DataType && node is NodeVariable)
-                {
-                    dataValueArray[index] = new DataValue((node as NodeVariable).DataType ?? new NodeId(UAConst.BaseDataType), new StatusCode?(StatusCode.Good), new DateTime?(), new DateTime?());
-                }
-                else if (readValueIds[index].AttributeId == NodeAttribute.DataType && node is NodeVariableType)
-                {
-                    dataValueArray[index] = new DataValue((node as NodeVariableType).DataType ?? new NodeId(UAConst.BaseDataType), new StatusCode?(StatusCode.Good), new DateTime?(), new DateTime?());
-                }
-                else if ((readValueIds[index].AttributeId == NodeAttribute.AccessLevel || readValueIds[index].AttributeId == NodeAttribute.AccessLevelEx) && node is NodeVariable)
-                {
-                    dataValueArray[index] = new DataValue((byte)(node as NodeVariable).AccessLevel, new StatusCode?(StatusCode.Good), new DateTime?(), new DateTime?());
-                }
-                else if (readValueIds[index].AttributeId == NodeAttribute.UserAccessLevel && node is NodeVariable)
-                {
-                    dataValueArray[index] = new DataValue((byte)(node as NodeVariable).UserAccessLevel, new StatusCode?(StatusCode.Good), new DateTime?(), new DateTime?());
-                }
-                else if (readValueIds[index].AttributeId == NodeAttribute.Historizing && node is NodeVariable)
-                {
-                    dataValueArray[index] = new DataValue((node as NodeVariable).IsHistorizing, new StatusCode?(StatusCode.Good), new DateTime?(), new DateTime?());
-                }
-                else if (readValueIds[index].AttributeId == NodeAttribute.MinimumSamplingInterval && node is NodeVariable)
-                {
-                    dataValueArray[index] = new DataValue((node as NodeVariable).MinimumResamplingInterval, new StatusCode?(StatusCode.Good), new DateTime?(), new DateTime?());
-                }
-                else if (readValueIds[index].AttributeId == NodeAttribute.Executable && node is NodeMethod)
-                {
-                    dataValueArray[index] = new DataValue((node as NodeMethod).IsExecutable, new StatusCode?(StatusCode.Good), new DateTime?(), new DateTime?());
-                }
-                else if (readValueIds[index].AttributeId == NodeAttribute.UserExecutable && node is NodeMethod)
-                {
-                    dataValueArray[index] = new DataValue((node as NodeMethod).IsUserExecutable, new StatusCode?(StatusCode.Good), new DateTime?(), new DateTime?());
-                }
+                // if node is not in adress space
+                if (!this.AddressSpaceTable.TryGetValue(readValueIds[index].NodeId, out Node node))
+                    dataValueArray[index] = new DataValue(null, StatusCode.BadNodeIdUnknown, DateTime.Now, DateTime.Now);
+                // if node readable
+                else if (!this.SessionHasPermissionToRead(session, readValueIds[index].NodeId))
+                    dataValueArray[index] = new DataValue(null, StatusCode.BadNotReadable, DateTime.Now, DateTime.Now);
+                // handle request 
                 else
                 {
-                    int num = readValueIds[index].AttributeId != NodeAttribute.ValueRank ? 0 : (node is NodeVariable ? 1 : 0);
-                    dataValueArray[index] = num == 0 ? new DataValue(null, new StatusCode?(StatusCode.Good), new DateTime?(), new DateTime?()) : new DataValue((node as NodeVariable).ValueRank, new StatusCode?(StatusCode.Good), new DateTime?(), new DateTime?());
+                    switch (readValueIds[index].AttributeId)
+                    {
+                        case NodeAttribute.None:
+                            break;
+                        case NodeAttribute.NodeId:
+                            dataValueArray[index] = new DataValue(readValueIds[index].NodeId, StatusCode.Good, DateTime.Now, DateTime.Now);
+                            break;
+                        case NodeAttribute.NodeClass:
+                            dataValueArray[index] = new DataValue((int)node.GetNodeClass(), StatusCode.Good, DateTime.Now, DateTime.Now);
+                            break;
+                        case NodeAttribute.BrowseName:
+                            dataValueArray[index] = new DataValue(node.BrowseName, StatusCode.Good, DateTime.Now, DateTime.Now);
+                            break;
+                        case NodeAttribute.DisplayName:
+                            dataValueArray[index] = new DataValue(node.DisplayName, StatusCode.Good, DateTime.Now, DateTime.Now);
+                            break;
+                        case NodeAttribute.Description:
+                            dataValueArray[index] = new DataValue(node.Description, StatusCode.Good, DateTime.Now, DateTime.Now);
+                            break;
+                        case NodeAttribute.WriteMask:
+                            dataValueArray[index] = new DataValue(node.WriteMask, StatusCode.Good, DateTime.Now, DateTime.Now);
+                            break;
+                        case NodeAttribute.UserWriteMask:
+                            dataValueArray[index] = new DataValue(node.UserWriteMask, StatusCode.Good, DateTime.Now, DateTime.Now);
+                            break;
+                        case NodeAttribute.IsAbstract:
+                            object isAbstract = null;
+                            // switch on object type 
+                            switch (node)
+                            {
+                                case NodeReferenceType _:
+                                    isAbstract = (node as NodeReferenceType).IsAbstract;
+                                    break;
+                                case NodeDataType _:
+                                    isAbstract = (node as NodeDataType).IsAbstract;
+                                    break;
+                                default:
+                                    break;
+                            }
+
+                            dataValueArray[index] = new DataValue(isAbstract, StatusCode.Good, DateTime.Now, DateTime.Now);
+                            break;
+                        case NodeAttribute.Symmetric:
+                            if (node is NodeReferenceType)
+                                dataValueArray[index] = new DataValue((node as NodeReferenceType).IsSymmetric, StatusCode.Good, DateTime.Now, DateTime.Now);
+
+                            break;
+                        case NodeAttribute.InverseName:
+                            if (node is NodeReferenceType)
+                                dataValueArray[index] = new DataValue((node as NodeReferenceType).InverseName, StatusCode.Good, DateTime.Now, DateTime.Now);
+
+                            break;
+                        case NodeAttribute.ContainsNoLoops:
+                            if (node is NodeView)
+                                dataValueArray[index] = new DataValue((node as NodeView).ContainsNoLoops, StatusCode.Good, DateTime.Now, DateTime.Now);
+                            break;
+                        case NodeAttribute.EventNotifier:
+                            object eventNotifier = null;
+                            // switch on object type 
+                            switch (node)
+                            {
+                                case NodeView _:
+                                    eventNotifier = (node as NodeView).EventNotifier;
+                                    break;
+                                case NodeObject _:
+                                    eventNotifier = (node as NodeObject).EventNotifier;
+                                    break;
+                            }
+                            dataValueArray[index] = new DataValue(eventNotifier, StatusCode.Good, DateTime.Now, DateTime.Now);
+                            break;
+                        case NodeAttribute.Value:
+                            dataValueArray[index] = this.HandleReadRequestInternal(readValueIds[index].NodeId);
+                            break;
+                        case NodeAttribute.DataType:
+                            object dataType = null;
+                            // switch on object type 
+                            switch (node)
+                            {
+                                case NodeVariable _:
+                                    dataType = (node as NodeVariable).DataType;
+                                    break;
+                                case NodeVariableType _:
+                                    dataType = (node as NodeVariableType).DataType;
+                                    break;
+                            }
+                            dataValueArray[index] = new DataValue(dataType ?? new NodeId(UAConst.BaseDataType), StatusCode.Good, DateTime.Now, DateTime.Now);
+                            break;
+                        case NodeAttribute.ValueRank:
+                            if (node is NodeVariable)
+                                dataValueArray[index] = new DataValue((node as NodeVariable).ValueRank, StatusCode.Good, DateTime.Now, DateTime.Now);
+                            break;
+                        case NodeAttribute.ArrayDimensions:
+                            if (node is NodeVariable)
+                            {
+                                object valueRank = null;
+                                if ((node as NodeVariable).ValueRank > 0)
+                                    valueRank = (node as NodeVariable).ValueRank;
+                                dataValueArray[index] = new DataValue(valueRank, StatusCode.Good, DateTime.Now, DateTime.Now);
+                            }
+                            else
+                                dataValueArray[index] = new DataValue(null, StatusCode.Good, DateTime.Now, DateTime.Now);
+                            break;
+                        case NodeAttribute.AccessLevel:
+                            if (node is NodeVariable)
+                                dataValueArray[index] = new DataValue((byte)(node as NodeVariable).AccessLevel, StatusCode.Good, DateTime.Now, DateTime.Now);
+                            break;
+                        case NodeAttribute.UserAccessLevel:
+                            if (node is NodeVariable)
+                                dataValueArray[index] = new DataValue((byte)(node as NodeVariable).UserAccessLevel, StatusCode.Good, DateTime.Now, DateTime.Now);
+                            break;
+                        case NodeAttribute.MinimumSamplingInterval:
+                            if (node is NodeVariable)
+                                dataValueArray[index] = new DataValue((node as NodeVariable).MinimumResamplingInterval, StatusCode.Good, DateTime.Now, DateTime.Now);
+                            break;
+                        case NodeAttribute.Historizing:
+                            if (node is NodeVariable)
+                                dataValueArray[index] = new DataValue((node as NodeVariable).IsHistorizing, StatusCode.Good, DateTime.Now, DateTime.Now);
+                            break;
+                        case NodeAttribute.Executable:
+                            if (node is NodeMethod)
+                                dataValueArray[index] = new DataValue((node as NodeMethod).IsExecutable, StatusCode.Good, DateTime.Now, DateTime.Now);
+                            break;
+                        case NodeAttribute.UserExecutable:
+                            if (node is NodeMethod)
+                                dataValueArray[index] = new DataValue((node as NodeMethod).IsUserExecutable, StatusCode.Good, DateTime.Now, DateTime.Now);
+                            break;
+                        case NodeAttribute.DataTypeDefinition:
+                            break;
+                        case NodeAttribute.RolePermissions:
+                            break;
+                        case NodeAttribute.UserRolePermissions:
+                            break;
+                        case NodeAttribute.AccessRestrictions:
+                            dataValueArray[index] = new DataValue((ushort)0, StatusCode.Good, DateTime.Now, DateTime.Now);
+
+                            break;
+                        // implementation https://reference.opcfoundation.org/v104/Core/DataTypes/AccessLevelExType/
+                        case NodeAttribute.AccessLevelEx:
+                            dataValueArray[index] = new DataValue(null, StatusCode.BadAttributeIdInvalid, DateTime.Now, DateTime.Now);
+
+                            break;
+                        default:
+                            break;
+                    }
+
+                    // catch all if null send not supported
+                    if (dataValueArray[index] == null)
+                        dataValueArray[index] = new DataValue(null, StatusCode.BadAttributeIdInvalid);
                 }
+
             }
             return dataValueArray;
         }
